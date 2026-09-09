@@ -1,0 +1,9 @@
+
+Welcome to Castle OS — Phase 1 live system.
+
+  Mode: check /proc/cmdline for castle.mode=cli|gui
+  Install to disk: castle-install
+  Castle tools:    castle
+
+This is a live medium. Nothing here persists across reboots.
+Docs: https://github.com/YEAHDOGS/castle-os

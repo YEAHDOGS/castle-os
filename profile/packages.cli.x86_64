@@ -1,0 +1,10 @@
+# Castle OS — headless CLI mode extras.
+# Router / NAS / server personality. Small on purpose; the bigger
+# appliance roles (Samba, firewall rules, VPN gateway) land in Phase 2.
+
+nftables          # firewall (router role groundwork)
+wireguard-tools   # VPN tunnels (Castle drawbridge)
+dnsmasq           # DNS/DHCP for the LAN side
+smartmontools     # disk health
+usbutils          # lsusb for hardware poking
+pciutils          # lspci for hardware poking

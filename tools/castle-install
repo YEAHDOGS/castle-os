@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+#
+# castle-install — install the live Castle OS system to disk (Phase 1).
+#
+# Minimal guided installer. It partitions ONE disk you name explicitly,
+# installs the same package set the ISO was built from, and sets up
+# systemd-boot. Anything it does not do (encryption, LVM, dual-boot,
+# Secure Boot) is a deliberate Phase 1 omission — see docs/PHASE2-TODO.md.
+#
+#   castle-install [--mode cli|gui] [--print-plan]
+#
+# --print-plan prints every step without touching any disk. Useful for
+# review. THIS SCRIPT IS UNTESTED on real hardware as of Phase 1:
+# exercise it in a VM with a blank virtual disk first (docs/RUNBOOK.md).
+#
+set -euo pipefail
+
+MODE="cli"
+PRINT_PLAN=0
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --mode)      MODE="${2:?--mode needs cli|gui}"; shift 2 ;;
+        --print-plan) PRINT_PLAN=1; shift ;;
+        -h|--help) sed -n '2,/^$/p' "$0"; exit 0 ;;
+        *) echo "castle-install: unknown option $1" >&2; exit 1 ;;
+    esac
+done
+[[ "$MODE" == cli || "$MODE" == gui ]] || { echo "mode must be cli or gui" >&2; exit 1; }
+
+# Package lists: live medium stages them at /usr/share/castle-os,
+# repo checkout keeps them in ../profile.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -d /usr/share/castle-os ]]; then
+    PKG_DIR=/usr/share/castle-os
+else
+    PKG_DIR="$SCRIPT_DIR/../profile"
+fi
+
+plan() {  # plan <description> [command...]
+    if [[ $PRINT_PLAN -eq 1 ]]; then
+        echo "PLAN: $1"
+    else
+        echo "==> $1"
+        if [[ $# -gt 1 ]]; then shift; "$@"; fi
+    fi
+}
+
+[[ $PRINT_PLAN -eq 1 ]] || [[ "$(id -u)" -eq 0 ]] || { echo "castle-install needs root" >&2; exit 1; }
+
+for p in base "$MODE"; do
+    [[ -f "$PKG_DIR/packages.$p.x86_64" ]] \
+        || { echo "missing package list: $PKG_DIR/packages.$p.x86_64" >&2; exit 1; }
+done
+
+echo "Available disks:"
+lsblk -dnpo NAME,SIZE,MODEL 2>/dev/null || lsblk -dn
+read -rp "Install target disk (e.g. /dev/sda or /dev/nvme0n1): " DISK
+[[ -b "$DISK" ]] || { echo "not a block device: $DISK" >&2; exit 1; }
+
+# partition naming: /dev/sda1 vs /dev/nvme0n1p1
+if [[ "$DISK" =~ [0-9]$ ]]; then P="${DISK}p"; else P="${DISK}"; fi
+EFI="${P}1"; ROOT="${P}2"
+
+echo
+echo "WARNING: this will ERASE $DISK completely and install Castle OS ($MODE mode)."
+read -rp "Type YES in capitals to continue: " CONFIRM
+[[ "$CONFIRM" == "YES" ]] || { echo "aborted."; exit 1; }
+
+read -rp "Timezone (default UTC): " TZ
+TZ="${TZ:-UTC}"
+
+# --- partition ---
+plan "Wipe and partition $DISK (GPT: 512M EFI + rest ext4 root)" \
+    sgdisk --zap-all --clear \
+        --new=1:0:+512M --typecode=1:ef00 --change-name=1:EFI \
+        --new=2:0:0     --typecode=2:8300 --change-name=2:ROOT \
+        "$DISK"
+plan "Format EFI as FAT32"  mkfs.fat -F32 "$EFI"
+plan "Format root as ext4"  mkfs.ext4 -q -L castle-root "$ROOT"
+
+# --- mount ---
+plan "Mount target at /mnt" /bin/true
+if [[ $PRINT_PLAN -eq 0 ]]; then
+    mount "$ROOT" /mnt
+    mkdir -p /mnt/boot
+    mount "$EFI" /mnt/boot
+fi
+
+# --- base install ---
+mapfile -t PKGS < <(grep -vE '^\s*(#|$)' "$PKG_DIR"/packages.base.x86_64 "$PKG_DIR"/packages."$MODE".x86_64)
+plan "pacstrap ${#PKGS[@]} packages into /mnt"
+[[ $PRINT_PLAN -eq 1 ]] || pacstrap -K /mnt "${PKGS[@]}"
+
+plan "Generate fstab" /bin/true
+[[ $PRINT_PLAN -eq 1 ]] || genfstab -U /mnt >> /mnt/etc/fstab
+
+# --- castle extras (not in any Arch repo) ---
+plan "Copy /opt/castle tools and the castle launcher into the new system" /bin/true
+if [[ $PRINT_PLAN -eq 0 ]]; then
+    mkdir -p /mnt/opt /mnt/usr/local/bin /mnt/usr/share/castle-os
+    cp -a /opt/castle /mnt/opt/ 2>/dev/null || cp -a "$SCRIPT_DIR/castle" /mnt/opt/
+    cp -a /usr/local/bin/castle /mnt/usr/local/bin/ 2>/dev/null || true
+    cp -a "$PKG_DIR"/packages.*.x86_64 /mnt/usr/share/castle-os/
+fi
+
+# --- configure inside the new system ---
+plan "Configure hostname, locale, timezone, bootloader, services" /bin/true
+if [[ $PRINT_PLAN -eq 0 ]]; then
+    arch-chroot /mnt /bin/bash <<CHROOT
+set -euo pipefail
+echo castle > /etc/hostname
+ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
+sed -i 's/^#en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen
+locale-gen >/dev/null
+echo 'LANG=en_US.UTF-8' > /etc/locale.conf
+echo 'KEYMAP=us' > /etc/vconsole.conf
+bootctl install --esp-path=/boot >/dev/null
+mkdir -p /boot/loader/entries
+cat > /boot/loader/entries/castle.conf <<ENTRY
+title   Castle OS ($MODE)
+linux   /vmlinuz-linux
+initrd  /initramfs-linux.img
+options root=LABEL=castle-root rw castle.mode=$MODE
+ENTRY
+systemctl enable NetworkManager sshd
+echo "Set the root password:"
+passwd
+CHROOT
+fi
+
+plan "Unmount and finish" /bin/true
+[[ $PRINT_PLAN -eq 1 ]] || umount -R /mnt
+
+echo
+echo "Castle OS ($MODE) installed on $DISK."
+echo "Remove the live medium and reboot."

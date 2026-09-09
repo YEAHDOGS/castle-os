@@ -1,0 +1,5 @@
+# labwc autostart — Castle OS Phase 1
+# Solid near-black background (custom wallpaper art is a Phase 2 TODO)
+# plus one terminal so the live desktop is immediately useful.
+swaybg -c 0a0a0f &
+foot &

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!-- labwc keybinds — Castle OS Phase 1. Full docs: labwc(1), labwc-config(5). -->
+<labwc_config>
+  <keyboard>
+    <keybind key="W-Return">
+      <action name="Execute" command="foot" />
+    </keybind>
+    <keybind key="W-d">
+      <action name="Execute" command="wofi --show drun" />
+    </keybind>
+    <keybind key="W-q">
+      <action name="Close" />
+    </keybind>
+    <keybind key="W-S-e">
+      <action name="Exit" />
+    </keybind>
+  </keyboard>
+</labwc_config>
