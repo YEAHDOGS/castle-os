@@ -1,0 +1,72 @@
+# Castle OS Phase 1 — airootfs package set (x86_64)
+# Minimal rescue set for the Phoenix Linux-rescue leg:
+#  - file manager
+#  - disk tools (inspect, clone, nuke, reinstall)
+#  - network (so Castle backups can land on the network share)
+#  - Wayland compositor for GUI mode
+#
+# NOTE: everything here must exist in the Arch repos named in pacman.conf.
+# Keep dependencies minimal — all code is a liability, all packages are too.
+
+## --- base / shell / editor ---
+bash
+sudo
+openssh
+git
+vim
+nano
+less
+man-db
+man-pages
+texinfo
+
+## --- file manager ---
+mc
+
+## --- disk tools ---
+arch-install-scripts
+parted
+gptfdisk
+e2fsprogs
+dosfstools
+exfatprogs
+ntfs-3g
+smartmontools
+hdparm
+ddrescue
+testdisk
+rsync
+pv
+pigz
+util-linux
+lvm2
+mdadm
+cryptsetup
+btrfs-progs
+
+## --- network ---
+networkmanager
+wget
+curl
+bind
+nmap
+
+## --- wayland GUI mode (compositor + terminal) ---
+sway
+swaybg
+foot
+waybar
+grim
+slurp
+wl-clipboard
+xorg-xwayland
+polkit
+
+## --- misc rescue ---
+usbutils
+pciutils
+dmidecode
+htop
+tree
+unzip
+zip

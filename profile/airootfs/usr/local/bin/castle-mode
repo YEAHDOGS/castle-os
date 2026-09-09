@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# castle-mode — reads the kernel command line for castle.mode=<mode> and
+# dispatches the Phase 1 boot-menu modes: analyze / backup / nuke / reinstall.
+#
+# SAFETY: as of Phase 1, nuke and reinstall are NOT implemented. Invoking them
+# prints the refusal and exits non-zero. A wipe-capable nuke may only land
+# after explicit disk enumeration + typed confirmation interlocks exist
+# (Phoenix requirement). Wiping the wrong disk must be structurally hard.
+
+set -euo pipefail
+
+MODE=""
+for arg in $(cat /proc/cmdline); do
+    case "$arg" in
+        castle.mode=*) MODE="${arg#castle.mode=}" ;;
+    esac
+done
+MODE="${MODE:-analyze}"
+
+say() { printf '[castle-mode] %s\n' "$*"; }
+
+case "$MODE" in
+    analyze)
+        say "analyze mode: inspect-only. Disks (read-only listing):"
+        lsblk -o NAME,SIZE,TYPE,MODEL,SERIAL
+        ;;
+    backup)
+        say "backup mode: Phase 1 placeholder — target Castle share, then rsync."
+        say "NOT IMPLEMENTED YET. Nothing was copied."
+        exit 3
+        ;;
+    nuke)
+        say "REFUSED: nuke is not implemented in Phase 1."
+        say "Nuke requires disk-enumeration + typed-confirmation interlocks first."
+        exit 4
+        ;;
+    reinstall)
+        say "reinstall mode: Phase 1 placeholder — no writes performed."
+        exit 3
+        ;;
+    *)
+        say "unknown castle.mode='$MODE'; defaulting to analyze."
+        lsblk -o NAME,SIZE,TYPE,MODEL,SERIAL
+        ;;
+esac

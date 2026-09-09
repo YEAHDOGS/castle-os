@@ -1,0 +1,10 @@
+
+  ____          _   _        ___  ____
+ / ___|__ _ ___| |_| | ___  / _ \/ ___|
+| |   / _` / __| __| |/ _ \| | | \___ \
+| |__| (_| \__ \ |_| |  __/| |_| |___) |
+ \____\__,_|___/\__|_|\___| \___/|____/
+
+Castle OS — Phase 1 rescue live system (Phoenix workstream).
+Boot with castle.mode=analyze|backup|nuke|reinstall (see boot menu).
+Type 'castle-mode' to run the current mode. GUI mode: start sway with 'sway'.
