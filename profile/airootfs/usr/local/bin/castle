@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+#
+# castle — Castle toolbox launcher (Castle OS Phase 1).
+# Runs the portable Castle Python tools shipped in /opt/castle.
+# All of them are standard-library only: no extra dependencies.
+#
+set -euo pipefail
+
+CASTLE_ROOT="/opt/castle"
+
+usage() {
+    cat <<'EOF'
+Usage: castle <tool> [args...]
+
+Tools (all paper-safe on the live medium; they only touch files you point at):
+
+  vault         encrypted secrets store        (castle/vault/secretstore.py)
+  tokens        DOGS encrypted token mint/verify (castle/tokens/tokens.py)
+  intake        backup intake tool             (castle/backup/intake.py)
+  flamethrower  secure file/dir audit & shred  (castle/flamethrower/)
+
+Each tool has its own --help. Examples:
+  castle vault --help
+  castle tokens --help
+EOF
+}
+
+run_mod() {  # run_mod <dir> <module> [args...]
+    local dir="$1" mod="$2"; shift 2
+    [[ -d "$CASTLE_ROOT/$dir" ]] || { echo "castle: $dir not installed under $CASTLE_ROOT" >&2; exit 1; }
+    cd "$CASTLE_ROOT/$dir"
+    # argv layout for `python3 -c '...' _ <module> <args...>`:
+    #   [0]='-'  [1]='_'  [2]=<module>  [3:]=<args>
+    exec python3 -c 'import sys; m = __import__(sys.argv[2]); sys.exit(m.main(sys.argv[3:]) or 0)' _ "$mod" "$@"
+}
+
+[[ $# -ge 1 ]] || { usage; exit 1; }
+cmd="$1"; shift
+
+case "$cmd" in
+    -h|--help|help) usage; exit 0 ;;
+    vault)  [[ -f "$CASTLE_ROOT/vault/secretstore.py" ]] \
+                || { echo "castle: vault not installed" >&2; exit 1; }
+            exec python3 "$CASTLE_ROOT/vault/secretstore.py" "$@" ;;
+    tokens)        run_mod tokens tokens "$@" ;;
+    intake)        run_mod backup intake "$@" ;;
+    flamethrower)  run_mod flamethrower flamethrower "$@" ;;
+    *) echo "castle: unknown tool '$cmd'" >&2; usage; exit 1 ;;
+esac

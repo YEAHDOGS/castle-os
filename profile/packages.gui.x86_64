@@ -1,0 +1,13 @@
+# Castle OS — GUI mode extras (Wayland).
+# labwc: tiny wlroots stacking compositor. Rationale in docs/DECISIONS.md.
+# Official Arch repos ONLY.
+
+labwc             # Wayland compositor
+swaybg            # wallpaper (solid color, Phase 1)
+foot              # Wayland-native terminal
+foot-terminfo
+wofi              # app launcher (Super+D)
+seatd             # seat management for non-root Wayland sessions
+polkit            # privilege prompts for GUI helpers
+xorg-xwayland     # X11 compat for stubborn apps
+ttf-dejavu        # fonts so the UI isn't tofu

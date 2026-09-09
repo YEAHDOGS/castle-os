@@ -1,0 +1,53 @@
+# Castle OS — base packages (both modes).
+# Official Arch repos ONLY (core/extra). One package per line.
+# Verified against https://archlinux.org/packages — see build.sh verify.
+
+# --- kernel & firmware ---
+linux
+linux-firmware
+amd-ucode
+intel-ucode
+
+# --- base system ---
+base
+mkinitcpio
+mkinitcpio-archiso
+
+# --- bootloaders & disk tools (live rescue + installer needs) ---
+syslinux
+efibootmgr
+dosfstools
+e2fsprogs
+parted
+gptfdisk
+squashfs-tools
+arch-install-scripts
+
+# --- networking ---
+networkmanager
+openssh
+iwd
+wireless-regdb
+wireless_tools
+wpa_supplicant
+
+# --- shell & editing ---
+bash-completion
+less
+man-db
+man-pages
+nano
+vim
+
+# --- castle tooling runtime ---
+python
+git
+
+# --- misc console ---
+curl
+wget
+ca-certificates
+htop
+tmux
+reflector
+sudo
