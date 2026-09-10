@@ -1,4 +1,4 @@
-# Castle OS 🏰 — "Clone Wars", Phase 1
+# Castle OS 🏰 - Work in Progress
 
 Castle OS is Castle as its own Linux distribution: a flashable appliance based
 directly on rolling **Arch Linux** that can act as a **router**, a **NAS /
