@@ -58,6 +58,50 @@ fi
 for s in build.sh verify.sh profile/airootfs/usr/local/bin/castle-mode profile/airootfs/usr/local/bin/castle-disks; do
     if bash -n "$s"; then ok "bash -n: $s"; else fail "bash -n: $s"; fi
 done
+if bash -n profile/profiledef.sh; then
+    ok "bash -n: profile/profiledef.sh"
+else
+    fail "bash -n: profile/profiledef.sh"
+fi
+
+# 5. profile hygiene -----------------------------------------------------------
+# pacman.conf: official repos only — no hardcoded Server lines, mirrorlist
+# includes only (DOGS default-deny, no third-party mirrors).
+if grep -qE '^\s*Server\s*=' profile/pacman.conf; then
+    fail "pacman.conf has hardcoded Server lines"
+else
+    ok "pacman.conf has no hardcoded Server lines"
+fi
+if grep -q '^\[core\]' profile/pacman.conf && grep -q '^\[extra\]' profile/pacman.conf; then
+    ok "pacman.conf declares [core] and [extra]"
+else
+    fail "pacman.conf missing [core]/[extra] repos"
+fi
+# packages.x86_64: no duplicate entries.
+DUPS="$(grep -vE '^\s*(#|$)' profile/packages.x86_64 | sort | uniq -d)"
+if [ -z "$DUPS" ]; then
+    ok "packages.x86_64 has no duplicate entries"
+else
+    fail "packages.x86_64 duplicates: $DUPS"
+fi
+# build.sh: checksum write + re-verify steps must be present.
+if grep -q 'sha256sum' build.sh && grep -q 'sha256sum -c' build.sh; then
+    ok "build.sh writes and re-verifies SHA-256 checksum"
+else
+    fail "build.sh missing SHA-256 write/verify steps"
+fi
+# build.sh: pre-flight verify.sh gate must be present.
+if grep -q '\./verify\.sh' build.sh; then
+    ok "build.sh runs ./verify.sh as a pre-flight gate"
+else
+    fail "build.sh missing pre-flight verify.sh gate"
+fi
+# syslinux has the GUI boot entry the docs promise.
+if grep -q 'LABEL castle-gui' profile/syslinux/syslinux.cfg; then
+    ok "syslinux defines the GUI boot entry"
+else
+    fail "syslinux missing castle-gui entry"
+fi
 
 # 4. boot entries agree on castle.mode values ----------------------------------
 for mode in analyze backup nuke reinstall; do

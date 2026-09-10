@@ -28,13 +28,19 @@ headlessly; every Phoenix PowerShell script gets a bash twin here.
 
 ```bash
 ./verify.sh     # scaffold self-check (fast, no network, no root)
-./build.sh      # mkarchiso build + SHA-256 checksum + package listing
+./build.sh      # pre-flight verify, mkarchiso build, SHA-256 checksum
 ```
 
 `build.sh` runs `mkarchiso` on `profile/`, then:
-1. asserts the ISO exists and is non-empty,
-2. writes `<iso>.sha256` and re-verifies it,
-3. dumps the declared package set from `profile/packages.x86_64`.
+1. pre-flight: `./verify.sh` must pass, or the build aborts before touching
+   mkarchiso,
+2. ISO sanity: exists, non-empty, above a gross minimum size,
+3. provenance: `<iso>.build-info.txt` records build date, git commit,
+   `profiledef.sh`/`packages.x86_64`/`pacman.conf` checksums, and the
+   mkarchiso version, so any ISO can be traced back to exact inputs
+   (mkarchiso is not a reproducible build; this records what we can),
+4. SHA-256 checksum written to `<iso>.sha256` and re-verified,
+5. declared package set dumped from `profile/packages.x86_64`.
 
 Package sources: official Arch repos only (`profile/pacman.conf`), per the DOGS
 default-deny posture — no third-party mirrors, ever.
