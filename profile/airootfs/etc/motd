@@ -7,4 +7,4 @@
 
 Castle OS — Phase 1 rescue live system (Phoenix workstream).
 Boot with castle.mode=analyze|backup|nuke|reinstall (see boot menu).
-Type 'castle-mode' to run the current mode. GUI mode: start sway with 'sway'.
+Type 'castle-mode' to run the current mode. Try 'castle-disks' to enumerate disks (read-only). GUI mode: start sway with 'sway'.
