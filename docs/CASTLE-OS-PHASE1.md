@@ -48,6 +48,7 @@ profile/                      archiso profile
   pacman.conf                 official-repos-only pacman config
   airootfs/                   live-system overlay
     usr/local/bin/castle-mode mode dispatcher (safe Phase 1 version)
+    usr/local/bin/castle-disks read-only disk enumerator (nuke interlock step 1)
     etc/motd                  boot banner
   syslinux/syslinux.cfg       BIOS boot menu (5 entries)
   efiboot/loader/             UEFI systemd-boot entries (4 modes)
@@ -60,5 +61,6 @@ verify.sh                     scaffold self-check
 1. Emergency runbook: image infected drive → back up data to Castle → wipe →
    rebuild in one step.
 2. `backup` implementation: enumerate disks, rsync to Castle share.
-3. Nuke interlocks: disk enumeration UI + typed confirmation, then `nuke`.
+3. Nuke interlocks: disk enumeration is DONE (`castle-disks`, read-only);
+   remaining: numbered-target selection + typed confirmation, then `nuke`.
 4. Phoenix bash twins of the Windows-side PowerShell scripts.

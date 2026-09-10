@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# castle-disks — READ-ONLY disk enumeration for Castle OS rescue modes.
+#
+# Prints a numbered table of every disk-type block device the live system
+# sees, so a human (or a later script) can identify a nuke/backup target
+# WITHOUT typing a bare /dev name. This is step one of the nuke safety
+# interlocks: you cannot select a target you have not first enumerated.
+#
+# SAFETY: strictly read-only. lsblk performs no writes, no mounts, no
+# partitioning. This script must never gain dd/mkfs/wipefs/shred — verify.sh
+# rejects those patterns anywhere under profile/airootfs/usr/local/bin/.
+
+set -euo pipefail
+
+say() { printf '[castle-disks] %s\n' "$*"; }
+
+command -v lsblk >/dev/null 2>&1 || { say "ERROR: lsblk not found"; exit 1; }
+
+# The live image has no jq, so parse `lsblk -P` (KEY="value" pairs) by hand.
+val() { # val "$line" KEY -> value of KEY in an lsblk -P line
+    local line="$1" key="$2"
+    line="${line#*${key}=\"}"
+    line="${line%%\"*}"
+    printf '%s' "$line"
+}
+
+# Identify the device the live system booted from, to call it out explicitly.
+BOOTDEV=""
+for arg in $(cat /proc/cmdline 2>/dev/null); do
+    case "$arg" in
+        archisodevice=*) BOOTDEV="${arg#archisodevice=}" ;;
+    esac
+done
+
+say "Enumerated block devices (read-only listing):"
+printf '%-4s %-12s %-10s %-24s %-20s %-8s %s\n' \
+    '#' 'NAME' 'SIZE' 'MODEL' 'SERIAL' 'TRAN' 'NOTES'
+printf '%s\n' '---- ------------ ---------- ------------------------ -------------------- -------- ------------------------------'
+
+i=0
+while IFS= read -r line; do
+    [ "$(val "$line" TYPE)" = "disk" ] || continue
+    i=$((i + 1))
+    name="$(val "$line" NAME)"
+    size="$(val "$line" SIZE)"
+    model="$(val "$line" MODEL)"; [ -z "$model" ] && model="—"
+    serial="$(val "$line" SERIAL)"; [ -z "$serial" ] && serial="—"
+    tran="$(val "$line" TRAN)"; [ -z "$tran" ] && tran="—"
+    rm="$(val "$line" RM)"
+    notes=""
+    [ "$rm" = "1" ] && notes="removable"
+    case "$name" in
+        "$BOOTDEV"|"${BOOTDEV#/dev/}")
+            notes="${notes:+$notes, }live USB (boot device — do not touch)"
+            ;;
+    esac
+    printf '%-4s %-12s %-10s %-24s %-20s %-8s %s\n' \
+        "$i" "$name" "$size" "${model:0:24}" "${serial:0:20}" "$tran" "$notes"
+done < <(lsblk -a -P -o NAME,SIZE,TYPE,MODEL,SERIAL,TRAN,RM)
+
+if [ "$i" -eq 0 ]; then
+    say "no disk-type block devices found."
+    exit 2
+else
+    say "$i disk(s) enumerated. Nothing was modified."
+fi

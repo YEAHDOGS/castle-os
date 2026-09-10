@@ -22,6 +22,7 @@ REQUIRED=(
   profile/packages.x86_64
   profile/pacman.conf
   profile/airootfs/usr/local/bin/castle-mode
+  profile/airootfs/usr/local/bin/castle-disks
   profile/airootfs/etc/motd
   profile/syslinux/syslinux.cfg
   profile/efiboot/loader/loader.conf
@@ -39,19 +40,22 @@ for f in "${REQUIRED[@]}"; do
 done
 
 # 2. nuke safety interlock ----------------------------------------------------
-if grep -q "REFUSED" profile/airootfs/usr/local/bin/castle-mode; then
+# No destructive commands may exist anywhere in the live-system bin dir:
+# enumeration is the only allowed disk interaction in Phase 1.
+BIN="profile/airootfs/usr/local/bin"
+if grep -q "REFUSED" "$BIN/castle-mode"; then
     ok "castle-mode refuses nuke (interlock present)"
 else
     fail "castle-mode missing nuke refusal"
 fi
-if grep -qE 'dd\s+if=|mkfs\.|wipefs|shred' profile/airootfs/usr/local/bin/castle-mode; then
-    fail "castle-mode contains destructive commands — not allowed in Phase 1"
+if grep -vE '^\s*#' "$BIN"/castle-* | grep -qE 'dd\s+if=|mkfs\.|wipefs|shred'; then
+    fail "destructive commands found in $BIN — not allowed in Phase 1"
 else
-    ok "castle-mode contains no destructive commands"
+    ok "no destructive commands in $BIN (enumeration only)"
 fi
 
 # 3. shell syntax --------------------------------------------------------------
-for s in build.sh verify.sh profile/airootfs/usr/local/bin/castle-mode; do
+for s in build.sh verify.sh profile/airootfs/usr/local/bin/castle-mode profile/airootfs/usr/local/bin/castle-disks; do
     if bash -n "$s"; then ok "bash -n: $s"; else fail "bash -n: $s"; fi
 done
 
