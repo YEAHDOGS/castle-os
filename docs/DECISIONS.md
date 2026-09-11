@@ -2,7 +2,7 @@
 
 ## Wayland compositor: labwc (not sway)
 
-Brandon's spec: GUI mode runs on "a Wayland compositor". The two serious
+Design spec: GUI mode runs on "a Wayland compositor". The two serious
 lightweight candidates on Arch:
 
 | | labwc | sway |
