@@ -79,6 +79,30 @@ extra dependencies. The `castle` command lists and runs them. Anything with
 undeclared or heavy dependencies (the Kotlin server/app, QEMU/Windows
 hypervisor bits) is **not** force-fit — it's on the Phase 2 list.
 
+## File versioning (Chains)
+
+Castle OS is the home of Chains — "git for files." The Chains engine is
+vendored under `tools/castle/chains/` (source commit pinned in
+`PROVENANCE.md`) and ships on the live system at `/opt/castle/chains`, with
+a first-class `chains` CLI in the overlay. To version any directory:
+
+```bash
+cd ~/documents
+chains init
+chains watch -Add .                     # watch this directory
+chains patterns -SetInclude "*.md"      # track markdown (save-data globs are the default)
+chains commit -m "draft finished"
+chains status; chains log; chains verify
+```
+
+Every commit is a tamper-evident journal entry (id chained to parent id,
+timestamp, message, file list) plus content-addressed snapshots — the journal
+lives in `<vault>/.chains/journal.jsonl` and the blobs in
+`<vault>/.chains/snapshots/`. Engine commands need `pwsh` (PowerShell) on the
+live system and fail closed without it; the dependency-free
+`scripts/chains-doctor.sh` (health check) and `scripts/chains-sync.sh`
+(offline push/fetch through any directory remote) always work.
+
 ## What was verified (without a real Arch box)
 
 - `profiledef.sh` sources cleanly; all required archiso variables present.
