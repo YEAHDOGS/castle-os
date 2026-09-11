@@ -27,7 +27,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install archiso
-        run: pacman -Syu --noconfirm --needed archiso
+        # verify step needs python3 (py_compile + package repo JSON check)
+        # and curl (official-repo existence lookup via archlinux.org)
+        run: pacman -Syu --noconfirm --needed archiso python curl
 
       - name: Offline verification (no mkarchiso needed)
         run: ./build.sh verify
