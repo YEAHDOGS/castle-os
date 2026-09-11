@@ -45,6 +45,12 @@ cmd_verify() {
     for f in "$REPO_DIR/build.sh" \
              "$REPO_DIR/tools/castle-install" \
              "$REPO_DIR/profile/airootfs/usr/local/bin/castle" \
+             "$REPO_DIR/profile/airootfs/usr/local/bin/chains" \
+             "$REPO_DIR/tools/castle/chains/chains.sh" \
+             "$REPO_DIR/tools/castle/chains/scripts/chains-doctor.sh" \
+             "$REPO_DIR/tools/castle/chains/scripts/chains-sync.sh" \
+             "$REPO_DIR/tools/castle/chains/scripts/chains-sync-plan.sh" \
+             "$REPO_DIR/tools/castle/chains/tests/"*.sh \
              "$REPO_DIR/profile/airootfs/root/.bash_profile" \
              "$REPO_DIR/profile/airootfs/root/.config/labwc/autostart" \
              "$REPO_DIR/profile/profiledef.sh"; do
