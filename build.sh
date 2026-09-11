@@ -28,6 +28,13 @@ EOF
 
 die() { echo "build.sh: ERROR: $*" >&2; exit 1; }
 
+# pkg_names <fragment> — one clean package name per line: strips full-line
+# comments, blank lines, trailing "# comment"s and surrounding whitespace.
+# Arch package names never contain '#', so splitting there is safe.
+pkg_names() {
+    sed -e 's/#.*$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' "$1" | grep -vE '^$' || true
+}
+
 # ---------------------------------------------------------------------------
 # verify: everything checkable without a real Arch box
 # ---------------------------------------------------------------------------
@@ -67,7 +74,7 @@ cmd_verify() {
             echo "  WARN $f contains blank lines (harmless, archiso skips them)"
         fi
         local dupes
-        dupes=$(grep -vE '^\s*(#|$)' "$f" | sort | uniq -d || true)
+        dupes=$(pkg_names "$f" | sort | uniq -d || true)
         if [[ -n "$dupes" ]]; then
             echo "  FAIL duplicate packages in $f: $dupes"; failures=$((failures+1))
         fi
@@ -92,7 +99,7 @@ sys.exit(0 if '${pkg}' in names else 1)
 
     echo "==> cross-fragment duplicates"
     local all_dupes
-    all_dupes=$( { grep -vE '^\s*(#|$)' "$PROFILE_SRC"/packages.*.x86_64; } | sort | uniq -d || true)
+    all_dupes=$( { for frag in "$PROFILE_SRC"/packages.*.x86_64; do pkg_names "$frag"; done; } | sort | uniq -d || true)
     if [[ -n "$all_dupes" ]]; then
         echo "  FAIL package listed in more than one fragment: $all_dupes"; failures=$((failures+1))
     else
@@ -139,8 +146,8 @@ cmd_assemble() {
         echo "# Castle OS $mode profile — assembled by build.sh, do not edit."
         echo "# Sources: packages.base.x86_64 + packages.$mode.x86_64"
         echo
-        grep -vE '^\s*(#|$)' "$PROFILE_SRC/packages.base.x86_64" || true
-        grep -vE '^\s*(#|$)' "$PROFILE_SRC/packages.$mode.x86_64" || true
+        pkg_names "$PROFILE_SRC/packages.base.x86_64"
+        pkg_names "$PROFILE_SRC/packages.$mode.x86_64"
     } > "$dest/packages.x86_64.new"
     rm -f "$dest"/packages.base.x86_64 "$dest"/packages.cli.x86_64 "$dest"/packages.gui.x86_64
     mv "$dest/packages.x86_64.new" "$dest/packages.x86_64"
