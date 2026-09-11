@@ -34,10 +34,19 @@ cd castle-os
 Full reproduction steps, QEMU test command, and flashing instructions:
 **[docs/RUNBOOK.md](docs/RUNBOOK.md)**.
 
-> ⚠️ The ISO has **not** been built in CI or in this container — `mkarchiso`
-> needs a real Arch userspace, root, and loop devices. The runbook is the
-> source of truth; everything else in this repo is verified as far as it can
-> be without that (see "What was verified" below).
+## How to get the ISO
+
+The ISOs are built automatically by the
+[`build-iso`](https://github.com/YEAHDOGS/castle-os/actions/workflows/build-iso.yml)
+workflow on every `master` push that touches the profile, tools, or build
+script (and can be run manually via **Actions → build-iso → Run workflow**).
+
+1. Go to **Actions → build-iso** and open the latest green run.
+2. Download the `castle-os-iso` artifact — it contains both
+   `castle-*-x86_64.iso` files (headless CLI and GUI Wayland).
+
+Then flash per **[docs/RUNBOOK.md](docs/RUNBOOK.md)**. Nothing is deployed
+anywhere by CI; the artifact ISOs are the deliverable.
 
 ## Layout
 

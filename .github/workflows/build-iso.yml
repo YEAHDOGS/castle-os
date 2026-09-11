@@ -1,0 +1,50 @@
+name: build-iso
+
+# Build the Castle OS live ISOs on a real Arch userspace in CI.
+# mkarchiso needs root, pacman and loop devices, so this job runs in a
+# privileged Arch Linux container on the runner. The workflow reuses the
+# repo's own build pipeline (build.sh), which assembles out/profile-<mode>/
+# from profile/ + the package fragments — no second build path to drift.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "profile/**"
+      - "tools/**"
+      - "build.sh"
+      - ".github/workflows/build-iso.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    container:
+      image: archlinux:latest
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install archiso
+        run: pacman -Syu --noconfirm --needed archiso
+
+      - name: Offline verification (no mkarchiso needed)
+        run: ./build.sh verify
+
+      - name: Build headless CLI ISO
+        run: ./build.sh cli
+
+      - name: Build GUI ISO
+        run: ./build.sh gui
+
+      - name: List built ISOs
+        run: ls -la out/*.iso
+
+      - name: Upload ISO artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: castle-os-iso
+          path: out/*.iso
+          if-no-files-found: error
+          retention-days: 30
