@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+#
+# chains — Chains ("git for files") versioning CLI on Castle OS.
+#
+# Thin wrapper around the vendored Chains engine shipped at /opt/castle/chains
+# (see tools/castle/chains/PROVENANCE.md in the castle-os repo). The engine
+# itself (modules/vault.ps1) runs on PowerShell: engine commands (commit,
+# status, log, diff, restore, verify, ...) need `pwsh` on PATH and fail closed
+# with a clear message without it. The read-only twins — doctor, sync, and
+# sync-plan — are pure bash and always work:
+#
+#   chains.sh doctor-style:  /opt/castle/chains/scripts/chains-doctor.sh <vault>
+#   chains.sh sync-style:    /opt/castle/chains/scripts/chains-sync.sh <vault> <remote> --direction push|fetch
+#
+set -euo pipefail
+
+CHAINS_HOME="/opt/castle/chains"
+
+[[ -x "$CHAINS_HOME/chains.sh" ]] || {
+    echo "chains: not installed under $CHAINS_HOME" >&2
+    exit 1
+}
+
+exec "$CHAINS_HOME/chains.sh" "$@"
