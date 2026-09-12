@@ -21,7 +21,9 @@ it's the honest backlog.
 
 - [ ] Router: nftables policy, DHCP/DNS (dnsmasq is installed; policy isn't),
       sane WAN/LAN defaults, web or TUI status
-- [ ] NAS / private cloud: Samba shares, storage pooling, the 10TB-drive story
+- [ ] NAS / private cloud: Samba is installed with a `[vault]` share on
+      `/srv/castle` (smbpasswd still required — see profile/airootfs/etc/samba/smb.conf);
+      remaining: storage pooling, the 10TB-drive story, per-user shares
 - [ ] Arcade: emulator set, controller support, kiosk launcher
 - [ ] Headless-first admin: SSH hardening, web dashboard or TUI
 
