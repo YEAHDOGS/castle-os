@@ -73,6 +73,18 @@ castle-install --mode cli       # then for real on the VIRTUAL disk
 
 ## 4. Flash to USB
 
+**Ventoy (recommended):** install Ventoy on the stick once, then just copy
+the ISO file onto it — no reflashing, and the same stick can carry the CLI
+and GUI ISOs side by side. mkarchiso produces hybrid ISOs, which Ventoy
+boots directly. Plug the stick into the target machine, pick the ISO from
+the Ventoy menu, then pick the Castle OS entry.
+
+```bash
+cp out/castle-*.iso /media/$USER/Ventoy/
+```
+
+**Classic flash** (dedicated stick per ISO):
+
 ```bash
 # TRIPLE-CHECK the device name. This destroys it.
 lsblk -dno NAME,SIZE,MODEL
